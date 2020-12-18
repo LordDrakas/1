@@ -1,0 +1,163 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Neuro
+{
+    public class Net
+    {
+        public static void ini(int[] n, out double[][,] jaggedArray)
+        {
+            Random rand = new Random();
+            jaggedArray = new double[n[0]][,];
+            for (int i = 1; i < n[0]; i++)
+            {
+                jaggedArray[i] = new double[n[i], n[i + 1]];
+                for (int j = 0; j < n[i]; j++)
+                {
+                    for (int k = 0; k < n[i + 1]; k++)
+                    {
+                        jaggedArray[i][j, k] = (double)rand.Next(0, 1000) / 1000;
+                        Console.Write(String.Format("{0,8:0.000}", jaggedArray[i][j, k]));
+                    }
+                    Console.WriteLine();
+                }
+                Console.WriteLine();
+                Console.WriteLine();
+            }
+
+
+        }
+
+        public static void go(double[] a, int[] n, double[][,] jaggedArray, out double[][] points, out double[] outar)
+        {
+            points = new double[n[0]][];
+            for (int i = 1; i < n[0]; i++)
+            {
+                points[i - 1] = new double[n[i + 1]];
+            }
+
+            points[n[0] - 1] = new double[5];
+            
+            double[] inar;
+            //double[] outar;
+            outar = new double[n[2]];
+            inar = a;
+            double sum = 0;
+            for (int i = 1; i < n[0]; i++)
+            {
+
+                outar = new double[n[i + 1]];
+                for (int j = 0; j < n[i + 1]; j++)
+                {
+                    sum = 0;
+                    for (int k = 0; k < n[i]; k++)
+                    {
+                        sum = sum + (inar[k] * jaggedArray[i][k, j]);
+
+                    }
+                    outar[j] = 1 / (1 + Math.Exp(-sum));
+                    points[i - 1][j] = outar[j];
+                    
+                }
+
+                inar = new double[n[i + 1]];
+                inar = outar;
+
+            }
+
+
+
+            /////////////////
+
+
+        }
+
+        public static void learn(int[] n, double[][] points, double[][,] jaggedArray)
+        {
+            double[][] deltas = new double[points.Length][];
+            for (int i = 0; i < deltas.Length; i++)
+            {
+                deltas[i] = new double[points[i].Length];
+            }
+            double wanted = 0.7;
+            deltas[deltas.Length - 2][0] = wanted - points[deltas.Length - 2][0];
+            
+            /////////////////////////////////////////////////////////////////////////
+
+            double sum = 0;
+            for (int i = n[0] - 2; i >= 1; i--)
+            {
+                sum = 0;
+                for (int j = 0; j < deltas[i - 1].Length; j++)
+                {
+                    
+                    for (int k = 0; k < deltas[i].Length; k++)
+                    {
+                        sum = sum + (jaggedArray[i + 1][j, k] * deltas[i][k]);
+                        
+                    }
+
+                    deltas[i - 1][j] = (-0.5) * Math.Exp(points[i - 1][j]) * sum;
+                    
+                }
+            }
+
+            /////////////////////////////////////////////////////////////////////////
+            for (int i = 1; i < jaggedArray.Length; i++)
+            {
+
+                for (int j = 0; j < n[i]; j++)
+                {
+                    for (int k = 0; k < n[i + 1]; k++)
+                    {
+                        jaggedArray[i][j, k] = 1 * (jaggedArray[i][j, k] + deltas[i - 1][k]);
+                        Console.Write(String.Format("{0,8:0.000}", jaggedArray[i][j, k]));
+                    }
+                    Console.WriteLine();
+                }
+                Console.WriteLine();
+                Console.WriteLine();
+            }
+
+
+        }
+
+        public static void Test(int n, int[] layers, out double[] outlay)
+        {
+            double x = 0;
+
+            //int[] layers = new int[] { 3, 2, 3, 1 };
+            double[][] points = new double[layers[0] - 1][];
+
+            for (int i = 0; i < layers[0] - 1; i++)
+            {
+                points[i] = new double[layers[i + 2]];
+            }
+            double[][,] jaggedArray = new double[layers[0]][,];
+            double[] inlay;
+            outlay = new double[layers.Length-1];
+            double f = 0.5 * (1 + Math.Exp(-x));
+            double fp = (-0.5) * Math.Exp(-x);
+            inlay = new double[] { 0.7, 0.5 };
+            ini(layers, out jaggedArray);
+            go(inlay, layers, jaggedArray, out points, out outlay);
+            for (int i = 0; i < layers[0] - 1; i++)
+            {
+                for (int j = 0; j < points[i].Length; j++)
+                {
+                    //Console.Write(String.Format("{0,8:0.000}", points[i][j]));
+                }
+                Console.WriteLine();
+            }
+            for (int i = 0; i < n; i++)
+            {
+                learn(layers, points, jaggedArray);
+            }
+            go(inlay, layers, jaggedArray, out points, out outlay);
+            Console.ReadLine();
+        }
+
+    }
